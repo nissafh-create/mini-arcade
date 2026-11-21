@@ -4,15 +4,19 @@ on:
     branches: [main]
   push:
     branches: [main]
- 
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.12']
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: ${{ matrix.python-version }}
           cache: pip
       - run: pip install -r requirements-dev.txt
       - name: Run tests and write report
@@ -20,11 +24,11 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: rapport-tests
+          name: rapport-tests-${{ matrix.python-version }}
           path: report.xml
       - name: Project checks
         run: ./scripts/check-project.sh
- 
+
   docker-build:
     needs: test
     runs-on: ubuntu-latest
