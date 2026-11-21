@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Play Game - Mini Arcade</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="brand">🕹️ Mini Arcade</a>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">Games</a>
+      <a href="leaderboard.html" class="nav-link">Leaderboards</a>
+      <div class="player-badge">
+        <span>👤</span>
+        <span id="nav-player-name" class="player-name">Player</span>
+        <button id="btn-edit-user" class="btn-edit-user" title="Change Name">✎</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div class="game-layout">
+      <!-- Main Game Area -->
+      <section class="game-panel">
+        <div class="game-top-bar">
+          <div>
+            <a href="index.html" class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">&larr; Games</a>
+            <span id="game-title" style="font-weight: 700; font-size: 1.25rem; margin-left: 0.75rem;">Game Title</span>
+          </div>
+          <div class="score-display">
+            <span>Score:</span>
+            <div id="current-score" class="score-pill">0</div>
+          </div>
+        </div>
+
+        <div id="game-arena">
+          <!-- Game script mounts UI here -->
+          <p style="color: var(--text-muted);">Loading game...</p>
+        </div>
+      </section>
+
+      <!-- Sidebar Mini Leaderboard -->
+      <aside class="leaderboard-card">
+        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.75rem; display:flex; justify-content:space-between; align-items:center;">
+          <span>Top 10 Scores</span>
+          <a id="full-lb-link" href="leaderboard.html" style="font-size: 0.8rem; color: var(--accent-cyan); text-decoration: none;">View All</a>
+        </h3>
+        <table class="leaderboard-table">
+          <thead>
+            <tr>
+              <th style="width: 40px;">#</th>
+              <th>Player</th>
+              <th style="text-align: right;">Score</th>
+            </tr>
+          </thead>
+          <tbody id="mini-lb-body">
+            <tr><td colspan="3" style="text-align:center; color: var(--text-muted);">Loading scores...</td></tr>
+          </tbody>
+        </table>
+      </aside>
+    </div>
+  </main>
+
+  <footer>
+    <p>Mini Arcade &bull; Python Flask + Pure Vanilla JS &bull; Local &amp; Self-Contained</p>
+  </footer>
+
+  <script src="js/common.js"></script>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const gameSlug = urlParams.get("game") || "snake";
+    const gameInfo = ARCADE_GAMES.find(g => g.slug === gameSlug) || ARCADE_GAMES[3];
+
+    document.getElementById("game-title").textContent = `${gameInfo.icon} ${gameInfo.name}`;
+    document.title = `${gameInfo.name} - Mini Arcade`;
+    document.getElementById("full-lb-link").href = `leaderboard.html?game=${gameInfo.slug}`;
+
+    // Mini Leaderboard Loader
+    async function loadMiniLeaderboard() {
+      const tbody = document.getElementById("mini-lb-body");
+      try {
+        const res = await fetch(`/api/leaderboard/${gameInfo.slug}`);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        if (data.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: var(--text-muted);">No scores yet!</td></tr>`;
+          return;
+        }
+        tbody.innerHTML = data.map((item, idx) => `
+          <tr>
+            <td class="rank-${idx + 1}">${idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : idx + 1}</td>
+            <td style="font-weight: 500;">${item.username}</td>
+            <td style="text-align: right; font-weight: 700; color: var(--accent-yellow);">${item.score}</td>
+          </tr>
+        `).join("");
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: var(--text-muted);">Unable to load scores</td></tr>`;
+      }
+    }
+
+    window.refreshLeaderboard = loadMiniLeaderboard;
+    loadMiniLeaderboard();
+
+    // Dynamically load the game script
+    const script = document.createElement("script");
+    script.src = `js/${gameInfo.slug}.js`;
+    script.onload = () => {
+      if (typeof window.initGame === "function") {
+        window.initGame(document.getElementById("game-arena"), {
+          gameSlug: gameInfo.slug,
+          updateScore: (s) => {
+            document.getElementById("current-score").textContent = s;
+          },
+          saveScore: (s) => {
+            submitScore(gameInfo.slug, s);
+          }
+        });
+      }
+    };
+    document.body.appendChild(script);
+  </script>
+</body>
+</html>

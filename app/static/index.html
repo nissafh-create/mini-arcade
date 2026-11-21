@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mini Arcade - 10 Retro Browser Games</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="brand">🕹️ Mini Arcade</a>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link active">Games</a>
+      <a href="leaderboard.html" class="nav-link">Leaderboards</a>
+      <div class="player-badge">
+        <span>👤</span>
+        <span id="nav-player-name" class="player-name">Player</span>
+        <button id="btn-edit-user" class="btn-edit-user" title="Change Name">✎</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div class="page-header">
+      <h1 class="page-title">Arcade Game Room</h1>
+      <p class="page-subtitle">Pick a game, set your highest score, and climb the global leaderboards!</p>
+    </div>
+
+    <div class="games-grid" id="games-grid">
+      <!-- Generated dynamically by common.js / inline script -->
+    </div>
+  </main>
+
+  <footer>
+    <p>Mini Arcade &bull; Python Flask + Pure Vanilla JS &bull; Local &amp; Self-Contained</p>
+  </footer>
+
+  <script src="js/common.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const grid = document.getElementById("games-grid");
+      grid.innerHTML = ARCADE_GAMES.map(g => `
+        <div class="game-card">
+          <div class="game-card-icon">${g.icon}</div>
+          <h3 class="game-card-title">${g.name}</h3>
+          <p class="game-card-desc">${g.desc}</p>
+          <div class="game-card-actions">
+            <a href="game.html?game=${g.slug}" class="btn btn-primary" style="flex:1;">Play Now</a>
+            <a href="leaderboard.html?game=${g.slug}" class="btn btn-secondary">Scores</a>
+          </div>
+        </div>
+      `).join("");
+    });
+  </script>
+</body>
+</html>

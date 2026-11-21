@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaderboard - Mini Arcade</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="brand">🕹️ Mini Arcade</a>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">Games</a>
+      <a href="leaderboard.html" class="nav-link active">Leaderboards</a>
+      <div class="player-badge">
+        <span>👤</span>
+        <span id="nav-player-name" class="player-name">Player</span>
+        <button id="btn-edit-user" class="btn-edit-user" title="Change Name">✎</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div class="page-header">
+      <h1 class="page-title">Hall of Fame</h1>
+      <p class="page-subtitle">View the top 10 arcade records for each game.</p>
+    </div>
+
+    <!-- Game Tabs -->
+    <div class="tabs-scroll" id="tabs-container"></div>
+
+    <div class="leaderboard-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+        <h2 id="active-game-title" style="font-size: 1.4rem; font-weight: 700;">Game Title</h2>
+        <a id="play-active-game-btn" href="#" class="btn btn-primary">Play This Game</a>
+      </div>
+
+      <table class="leaderboard-table">
+        <thead>
+          <tr>
+            <th style="width: 60px;">Rank</th>
+            <th>Player</th>
+            <th style="text-align: right;">Score</th>
+            <th style="text-align: right;">Played At</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-body">
+          <tr><td colspan="4" style="text-align:center; color: var(--text-muted); padding: 2rem;">Loading leaderboard...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer>
+    <p>Mini Arcade &bull; Python Flask + Pure Vanilla JS &bull; Local &amp; Self-Contained</p>
+  </footer>
+
+  <script src="js/common.js"></script>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    let selectedSlug = urlParams.get("game") || ARCADE_GAMES[0].slug;
+
+    const tabsContainer = document.getElementById("tabs-container");
+    const activeGameTitle = document.getElementById("active-game-title");
+    const playBtn = document.getElementById("play-active-game-btn");
+    const tbody = document.getElementById("leaderboard-body");
+
+    function renderTabs() {
+      tabsContainer.innerHTML = ARCADE_GAMES.map(g => `
+        <button class="tab-btn ${g.slug === selectedSlug ? 'active' : ''}" data-slug="${g.slug}">
+          ${g.icon} ${g.name}
+        </button>
+      `).join("");
+
+      tabsContainer.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          selectedSlug = btn.getAttribute("data-slug");
+          renderTabs();
+          loadLeaderboard();
+        });
+      });
+    }
+
+    async function loadLeaderboard() {
+      const game = ARCADE_GAMES.find(g => g.slug === selectedSlug) || ARCADE_GAMES[0];
+      activeGameTitle.textContent = `${game.icon} ${game.name} - Top 10 Scores`;
+      playBtn.href = `game.html?game=${game.slug}`;
+
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--text-muted); padding: 2rem;">Loading...</td></tr>`;
+
+      try {
+        const res = await fetch(`/api/leaderboard/${game.slug}`);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        if (data.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--text-muted); padding: 2rem;">No scores yet recorded for this game. Be the first to play!</td></tr>`;
+          return;
+        }
+        tbody.innerHTML = data.map((item, idx) => `
+          <tr>
+            <td class="rank-${idx + 1}" style="font-size: 1.1rem;">
+              ${idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : (idx + 1)}
+            </td>
+            <td style="font-weight: 600;">${item.username}</td>
+            <td style="text-align: right; font-weight: 700; color: var(--accent-yellow); font-size: 1.05rem;">${item.score.toLocaleString()}</td>
+            <td style="text-align: right; color: var(--text-muted); font-size: 0.85rem;">${item.played_at || "-"}</td>
+          </tr>
+        `).join("");
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--accent-red); padding: 2rem;">Failed to load leaderboard data.</td></tr>`;
+      }
+    }
+
+    renderTabs();
+    loadLeaderboard();
+  </script>
+</body>
+</html>
