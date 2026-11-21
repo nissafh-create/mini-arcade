@@ -103,3 +103,19 @@ pytest -v
 ## DevOps
 
 This project uses Git, Docker, Compose and CI/CD.
+ 
+## Start the project in one command
+ 
+    cp .env.example .env && docker compose up -d --build
+ 
+Then open http://localhost:8080. The values in .env.example are fake and for local use only.
+ 
+## Stop
+ 
+    docker compose down        # keeps the data
+    docker compose down -v     # deletes the data too
+ 
+## Pipeline and releases
+ 
+Every pull request runs tests and builds the image (GitHub Actions). A tag vX.Y.Z publishes the image to ghcr.io.
+Staging deployment and rollback are described in docs/one-page-sheet.md.
