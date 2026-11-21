@@ -99,3 +99,7 @@ Or for verbose output:
 ```bash
 pytest -v
 ```
+
+## DevOps
+
+This project uses Git, Docker, Compose and CI/CD.
