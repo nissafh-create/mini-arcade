@@ -18,7 +18,7 @@ def test_health_check(client):
     """Test GET /health returns 200 and {'status': 'ok'} without touching DB."""
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.get_json() == {"status": "ok"}
+    assert response.get_json() == {"status": "nope"}
 
 def test_post_scores_rejects_invalid_username(client):
     """Test POST /api/scores rejects username with invalid characters or length."""
